@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"github.com/zachdeibert/protomux/config"
+)
 
 func main() {
-	fmt.Println("Hello, world!")
+	if _, err := config.LoadFile("example.conf"); err != nil {
+		panic(err)
+	}
 }
