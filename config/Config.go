@@ -14,12 +14,14 @@ type Config struct {
 
 // Load the Config object from a stream
 func Load(stream io.Reader) (*Config, error) {
-	tokens, err := tokenizer.Tokenize(stream)
+	tokenStream := tokenizer.CreateTokenReader(stream)
+	var token *tokenizer.Token
+	var err error
+	for token, err = tokenStream.Next(); token != nil; token, err = tokenStream.Next() {
+		fmt.Println(token)
+	}
 	if err != nil {
 		return nil, err
-	}
-	for _, t := range tokens {
-		fmt.Println(t)
 	}
 	return nil, nil
 }
