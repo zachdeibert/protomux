@@ -49,7 +49,7 @@ func LoadFile(filename string) (*Config, *ast.AST, error) {
 
 // LoadCommandLine loads the Config object from command-line arguments
 func LoadCommandLine(args []string) (*Config, *ast.AST, error) {
-	tree, err := cmd.Parse(args)
+	tree, err := cmd.Parse(args, CommandFlags)
 	if err != nil {
 		return nil, nil, err
 	}

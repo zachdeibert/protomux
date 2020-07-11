@@ -1,12 +1,14 @@
-package cmd
+package config
+
+import "github.com/zachdeibert/protomux/config/cmd"
 
 // CommandFlags is a list of all supported command-line flags
-var CommandFlags = []CommandFlag{
+var CommandFlags = []cmd.CommandFlag{
 	{
 		ShortFlag:   "h",
 		LongFlag:    "help",
 		Description: "Prints this help text to the console and exits",
-		TreePath:    "/help",
+		TreePath:    "/showHelp",
 		NumArgs:     0,
 	},
 	{

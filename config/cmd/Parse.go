@@ -34,7 +34,7 @@ func splitGroups(args []string) []ArgumentGroup {
 }
 
 // Parse the command-line arguments into an AST
-func Parse(args []string) (*ast.AST, error) {
+func Parse(args []string, flags []CommandFlag) (*ast.AST, error) {
 	ret := &ast.AST{
 		Blocks:     []ast.Block{},
 		Parameters: []ast.Parameter{},
@@ -44,14 +44,14 @@ func Parse(args []string) (*ast.AST, error) {
 	for _, group := range splitGroups(args) {
 		var flag *CommandFlag = nil
 		if group.Arguments[0][1] == '-' {
-			for _, f := range CommandFlags {
+			for _, f := range flags {
 				if f.LongFlag == group.Arguments[0][2:] {
 					flag = &f
 					break
 				}
 			}
 		} else {
-			for _, f := range CommandFlags {
+			for _, f := range flags {
 				if f.ShortFlag == group.Arguments[0][1:] {
 					flag = &f
 					break

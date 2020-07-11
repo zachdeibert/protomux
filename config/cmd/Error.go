@@ -20,7 +20,7 @@ const (
 	ErrorCodeTreePathFormat ErrorCode = iota
 )
 
-// Error describes an AST parsing error
+// Error describes a command-line parsing error
 type Error struct {
 	Message  string
 	Code     ErrorCode
