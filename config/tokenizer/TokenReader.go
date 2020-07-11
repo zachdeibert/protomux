@@ -8,6 +8,7 @@ import (
 // TokenReader reads Tokens from a stream
 type TokenReader struct {
 	Scanner    *bufio.Scanner
+	FileName   string
 	Line       []byte
 	LineNo     int
 	Type       TokenType
@@ -20,9 +21,10 @@ type TokenReader struct {
 }
 
 // CreateTokenReader creates a new TokenReader
-func CreateTokenReader(stream io.Reader) *TokenReader {
+func CreateTokenReader(stream io.Reader, filename string) *TokenReader {
 	return &TokenReader{
 		Scanner:    bufio.NewScanner(stream),
+		FileName:   filename,
 		Line:       []byte{},
 		LineNo:     -1,
 		CharNo:     1,
@@ -37,12 +39,15 @@ func (t *TokenReader) Next() (*Token, error) {
 			if !t.WasNewline {
 				t.WasNewline = true
 				return &Token{
-					Type:      LineFeedToken,
-					Value:     "\n",
-					Line:      t.Line,
-					LineNo:    t.LineNo,
-					CharStart: len(t.Line),
-					CharLen:   1,
+					Type:  LineFeedToken,
+					Value: "\n",
+					Location: TokenLocation{
+						FileName:  t.FileName,
+						Line:      t.Line,
+						LineNo:    t.LineNo,
+						CharStart: len(t.Line),
+						CharLen:   1,
+					},
 				}, nil
 			}
 			if !t.Scanner.Scan() {
@@ -67,7 +72,13 @@ func (t *TokenReader) Next() (*Token, error) {
 				t.CharNo = len(t.Line)
 				break
 			case InvalidToken:
-				return nil, ErrorInvalidChar(t.Line, t.LineNo, t.CharNo)
+				return nil, ErrorInvalidChar(TokenLocation{
+					FileName:  t.FileName,
+					Line:      t.Line,
+					LineNo:    t.LineNo,
+					CharStart: t.CharNo,
+					CharLen:   1,
+				})
 			case StringToken:
 				t.StringBuf = []byte{}
 				fallthrough
@@ -78,12 +89,15 @@ func (t *TokenReader) Next() (*Token, error) {
 			case OpenBraceSymbol, CloseBraceSymbol, OpenBracketSymbol, CloseBracketSymbol, ColonSymbol, DotSymbol, CommaSymbol:
 				t.WasNewline = false
 				return &Token{
-					Type:      t.Type,
-					Value:     string([]byte{c}),
-					Line:      t.Line,
-					LineNo:    t.LineNo,
-					CharStart: t.CharNo,
-					CharLen:   1,
+					Type:  t.Type,
+					Value: string([]byte{c}),
+					Location: TokenLocation{
+						FileName:  t.FileName,
+						Line:      t.Line,
+						LineNo:    t.LineNo,
+						CharStart: t.CharNo,
+						CharLen:   1,
+					},
 				}, nil
 			case WhitespaceToken:
 				break
@@ -101,12 +115,15 @@ func (t *TokenReader) Next() (*Token, error) {
 					t.CharNo--
 					t.WasNewline = false
 					return &Token{
-						Type:      t.Type,
-						Value:     string(t.Line[start:t.CharNo]),
-						Line:      t.Line,
-						LineNo:    t.LineNo,
-						CharStart: start,
-						CharLen:   t.CharNo - start + 1,
+						Type:  t.Type,
+						Value: string(t.Line[start : t.CharNo+1]),
+						Location: TokenLocation{
+							FileName:  t.FileName,
+							Line:      t.Line,
+							LineNo:    t.LineNo,
+							CharStart: start,
+							CharLen:   t.CharNo - start + 1,
+						},
 					}, nil
 				}
 				break
@@ -137,12 +154,15 @@ func (t *TokenReader) Next() (*Token, error) {
 						t.CharStart = -1
 						t.WasNewline = false
 						return &Token{
-							Type:      StringToken,
-							Value:     string(t.StringBuf),
-							Line:      t.Line,
-							LineNo:    t.LineNo,
-							CharStart: start,
-							CharLen:   t.CharLen,
+							Type:  StringToken,
+							Value: string(t.StringBuf),
+							Location: TokenLocation{
+								FileName:  t.FileName,
+								Line:      t.Line,
+								LineNo:    t.LineNo,
+								CharStart: start,
+								CharLen:   t.CharLen,
+							},
 						}, nil
 					default:
 						t.StringBuf = append(t.StringBuf, c)

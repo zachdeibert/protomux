@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 
 	"github.com/zachdeibert/protomux/config/tokenizer"
 )
@@ -13,8 +14,8 @@ type Config struct {
 }
 
 // Load the Config object from a stream
-func Load(stream io.Reader) (*Config, error) {
-	tokenStream := tokenizer.CreateTokenReader(stream)
+func Load(stream io.Reader, filename string) (*Config, error) {
+	tokenStream := tokenizer.CreateTokenReader(stream, filename)
 	var token *tokenizer.Token
 	var err error
 	for token, err = tokenStream.Next(); token != nil; token, err = tokenStream.Next() {
@@ -33,5 +34,5 @@ func LoadFile(filename string) (*Config, error) {
 		return nil, err
 	}
 	defer f.Close()
-	return Load(f)
+	return Load(f, path.Base(filename))
 }
