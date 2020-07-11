@@ -1,12 +1,16 @@
 package tokenizer
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/zachdeibert/protomux/config/common"
+)
 
 // Token represents a single token from the config file
 type Token struct {
 	Type     TokenType
 	Value    string
-	Location TokenLocation
+	Location common.Location
 }
 
 func (t Token) String() string {

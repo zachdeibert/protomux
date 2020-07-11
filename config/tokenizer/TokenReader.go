@@ -3,6 +3,8 @@ package tokenizer
 import (
 	"bufio"
 	"io"
+
+	"github.com/zachdeibert/protomux/config/common"
 )
 
 // TokenReader reads Tokens from a stream
@@ -41,7 +43,7 @@ func (t *TokenReader) Next() (*Token, error) {
 				return &Token{
 					Type:  LineFeedToken,
 					Value: "\n",
-					Location: TokenLocation{
+					Location: common.Location{
 						FileName:  t.FileName,
 						Line:      t.Line,
 						LineNo:    t.LineNo,
@@ -72,7 +74,7 @@ func (t *TokenReader) Next() (*Token, error) {
 				t.CharNo = len(t.Line)
 				break
 			case InvalidToken:
-				return nil, ErrorInvalidChar(TokenLocation{
+				return nil, ErrorInvalidChar(common.Location{
 					FileName:  t.FileName,
 					Line:      t.Line,
 					LineNo:    t.LineNo,
@@ -91,7 +93,7 @@ func (t *TokenReader) Next() (*Token, error) {
 				return &Token{
 					Type:  t.Type,
 					Value: string([]byte{c}),
-					Location: TokenLocation{
+					Location: common.Location{
 						FileName:  t.FileName,
 						Line:      t.Line,
 						LineNo:    t.LineNo,
@@ -117,7 +119,7 @@ func (t *TokenReader) Next() (*Token, error) {
 					return &Token{
 						Type:  t.Type,
 						Value: string(t.Line[start : t.CharNo+1]),
-						Location: TokenLocation{
+						Location: common.Location{
 							FileName:  t.FileName,
 							Line:      t.Line,
 							LineNo:    t.LineNo,
@@ -156,7 +158,7 @@ func (t *TokenReader) Next() (*Token, error) {
 						return &Token{
 							Type:  StringToken,
 							Value: string(t.StringBuf),
-							Location: TokenLocation{
+							Location: common.Location{
 								FileName:  t.FileName,
 								Line:      t.Line,
 								LineNo:    t.LineNo,
