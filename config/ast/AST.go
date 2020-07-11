@@ -48,7 +48,7 @@ func parseAST(stream *lexer.LexemeReader) (*AST, *lexer.Lexeme, error) {
 			}
 			ast.Blocks = append(ast.Blocks, *block)
 		} else {
-			if param, first, err = parseParameter(stream, *first, *lexeme); err != nil {
+			if param, first, err = ParseParameter(stream, *first, *lexeme); err != nil {
 				return nil, nil, err
 			}
 			ast.Parameters = append(ast.Parameters, *param)
@@ -66,6 +66,56 @@ func ParseAST(stream *lexer.LexemeReader) (*AST, error) {
 		return nil, ErrorUnexpectedStartLexeme(*lexeme)
 	}
 	return ast, nil
+}
+
+// Merge another AST onto this AST
+func (a *AST) Merge(overwrite AST) {
+	blocks := map[string][]*Block{}
+	for i, block := range a.Blocks {
+		list, ok := blocks[block.Name]
+		if !ok {
+			list = []*Block{}
+		}
+		list = append(list, &a.Blocks[i])
+		blocks[block.Name] = list
+	}
+	blockIndices := map[string]int{}
+	for _, block := range overwrite.Blocks {
+		idx, ok := blockIndices[block.Name]
+		if !ok {
+			idx = 0
+		}
+		list, ok := blocks[block.Name]
+		if ok && idx < len(list) {
+			list[idx].Merge(block)
+		} else {
+			a.Blocks = append(a.Blocks, block)
+		}
+		blockIndices[block.Name] = idx + 1
+	}
+	params := map[string][]*Parameter{}
+	for i, param := range a.Parameters {
+		list, ok := params[param.Name]
+		if !ok {
+			list = []*Parameter{}
+		}
+		list = append(list, &a.Parameters[i])
+		params[param.Name] = list
+	}
+	paramIndices := map[string]int{}
+	for _, param := range overwrite.Parameters {
+		idx, ok := paramIndices[param.Name]
+		if !ok {
+			idx = 0
+		}
+		list, ok := params[param.Name]
+		if ok && idx < len(list) {
+			list[idx].Merge(param)
+		} else {
+			a.Parameters = append(a.Parameters, param)
+		}
+		paramIndices[param.Name] = idx + 1
+	}
 }
 
 func (a AST) String() string {

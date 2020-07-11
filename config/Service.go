@@ -34,6 +34,9 @@ func ParseService(block ast.Block) (*Service, error) {
 			return nil, ErrorUnknownParam(k, "Service", params.Locations[k])
 		}
 	}
+	for k := range params.Booleans {
+		return nil, ErrorUnknownParam(k, "Service", params.Locations[k])
+	}
 	protos := map[string]ast.Block{}
 	for i, b := range block.Children.Blocks {
 		proto, err := ParseProtocol(b)

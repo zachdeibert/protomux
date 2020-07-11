@@ -35,7 +35,25 @@ func parseConnectionParameter(lexeme lexer.Lexeme) (interface{}, error) {
 	}, nil
 }
 
-func parseParameter(stream *lexer.LexemeReader, first lexer.Lexeme, second lexer.Lexeme) (*Parameter, *lexer.Lexeme, error) {
+func parseBooleanParameter(lexeme lexer.Lexeme) (interface{}, error) {
+	if lexeme.Type != lexer.KeywordLexeme {
+		return nil, ErrorParameterArrayType(lexeme, "boolean")
+	}
+	var val bool
+	if lexeme.StringValue == "true" {
+		val = true
+	} else if lexeme.StringValue == "false" {
+		val = false
+	} else {
+		return nil, ErrorBooleanParse(lexeme)
+	}
+	return &BooleanParameterData{
+		Value: val,
+	}, nil
+}
+
+// ParseParameter parses a Parameter
+func ParseParameter(stream *lexer.LexemeReader, first lexer.Lexeme, second lexer.Lexeme) (*Parameter, *lexer.Lexeme, error) {
 	param := &Parameter{
 		Name:     first.StringValue,
 		Location: common.Merge([]common.Location{first.Location, second.Location}),
@@ -90,7 +108,11 @@ func parseParameter(stream *lexer.LexemeReader, first lexer.Lexeme, second lexer
 						param.Type = ConnectionParameter
 						parser = parseConnectionParameter
 						break
-					case lexer.KeywordLexeme, lexer.BlockStartLexeme, lexer.BlockEndLexeme, lexer.ArrayStartLexeme:
+					case lexer.KeywordLexeme:
+						param.Type = BooleanParameter
+						parser = parseBooleanParameter
+						break
+					case lexer.BlockStartLexeme, lexer.BlockEndLexeme, lexer.ArrayStartLexeme:
 						break
 					default:
 						panic("Missing case")
@@ -129,6 +151,11 @@ func parseParameter(stream *lexer.LexemeReader, first lexer.Lexeme, second lexer
 		panic("Missing case")
 	}
 	return param, nil, nil
+}
+
+// Merge another Parameter onto this Parameter
+func (p *Parameter) Merge(overwrite Parameter) {
+	*p = overwrite
 }
 
 func (p Parameter) String() string {

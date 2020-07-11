@@ -9,6 +9,8 @@ import (
 
 // Config contains the configuration for the protomux instance
 type Config struct {
+	Includes []string
+	ShowHelp bool
 	Services []Service
 }
 
@@ -18,16 +20,36 @@ func ParseConfig(tree ast.AST) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	for k := range params.Strings {
-		return nil, ErrorUnknownParam(k, "Config", params.Locations[k])
+	cfg := &Config{
+		Includes: []string{},
+		Services: make([]Service, len(tree.Blocks)),
+		ShowHelp: false,
 	}
-	for k := range params.Connections {
-		if k != "listen" {
+	for k, v := range params.Strings {
+		switch k {
+		case "include":
+			cfg.Includes = v
+			break
+		default:
 			return nil, ErrorUnknownParam(k, "Config", params.Locations[k])
 		}
 	}
-	cfg := &Config{
-		Services: make([]Service, len(tree.Blocks)),
+	for k := range params.Connections {
+		return nil, ErrorUnknownParam(k, "Config", params.Locations[k])
+	}
+	for k, v := range params.Booleans {
+		switch k {
+		case "showHelp":
+			for _, w := range v {
+				if w {
+					cfg.ShowHelp = true
+					break
+				}
+			}
+			break
+		default:
+			return nil, ErrorUnknownParam(k, "Config", params.Locations[k])
+		}
 	}
 	for i, b := range tree.Blocks {
 		if b.Name != "service" {

@@ -30,6 +30,11 @@ func parseBlock(stream *lexer.LexemeReader, first lexer.Lexeme, second lexer.Lex
 	return block, nil, nil
 }
 
+// Merge another Block onto this Block
+func (b *Block) Merge(overwrite Block) {
+	b.Children.Merge(overwrite.Children)
+}
+
 func (b Block) String() string {
 	return fmt.Sprintf("Block '%s':\n%s", b.Name, b.Children.String()[len("AST\n"):])
 }

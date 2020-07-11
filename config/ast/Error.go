@@ -27,6 +27,8 @@ const (
 	ErrorCodeParameterArrayType ErrorCode = iota
 	// ErrorCodeUnexpectedArrayEOF represents when the end of file was reached before an array finished
 	ErrorCodeUnexpectedArrayEOF ErrorCode = iota
+	// ErrorCodeBooleanParse represents when a keyword that was not a boolean was attempted to parse as a boolean
+	ErrorCodeBooleanParse ErrorCode = iota
 )
 
 // Error describes an AST parsing error
@@ -109,5 +111,14 @@ func ErrorUnexpectedArrayEOF(param *Parameter) error {
 		Message:  fmt.Sprintf("Unexpected EOF while processing array '%s'", param.Name),
 		Code:     ErrorCodeUnexpectedArrayEOF,
 		Location: param.Location,
+	}
+}
+
+// ErrorBooleanParse creates a new ErrorBooleanParse error
+func ErrorBooleanParse(lexeme lexer.Lexeme) error {
+	return &Error{
+		Message:  fmt.Sprintf("Expected boolean value, but got '%s'", lexeme.RawString()),
+		Code:     ErrorCodeBooleanParse,
+		Location: lexeme.Location,
 	}
 }
