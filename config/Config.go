@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/zachdeibert/protomux/config/ast"
 	"github.com/zachdeibert/protomux/config/lexer"
 	"github.com/zachdeibert/protomux/config/tokenizer"
 )
@@ -18,14 +19,11 @@ type Config struct {
 func Load(stream io.Reader, filename string) (*Config, error) {
 	tokenStream := tokenizer.CreateTokenReader(stream, filename)
 	lexemeStream := lexer.CreateLexemeReader(tokenStream)
-	var lexeme *lexer.Lexeme
-	var err error
-	for lexeme, err = lexemeStream.Next(); lexeme != nil; lexeme, err = lexemeStream.Next() {
-		fmt.Println(lexeme)
-	}
+	tree, err := ast.ParseAST(lexemeStream)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(tree)
 	return nil, nil
 }
 
