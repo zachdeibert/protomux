@@ -1,11 +1,15 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/zachdeibert/protomux/config"
 )
 
 func main() {
-	if _, err := config.LoadFile("example.conf"); err != nil {
+	cfg, err := config.LoadFile("example.conf")
+	if err != nil {
 		panic(err)
 	}
+	fmt.Println(cfg)
 }
