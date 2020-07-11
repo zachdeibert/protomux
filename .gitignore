@@ -136,3 +136,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Configuration files (for testing)
+*.conf
