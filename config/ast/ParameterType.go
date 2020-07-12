@@ -1,6 +1,9 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"net"
+)
 
 // ParameterType represents the type of a parameter
 type ParameterType int
@@ -26,11 +29,15 @@ func (p StringParameterData) String() string {
 // ConnectionParameterData is the data contained in a ConnectionParameter
 type ConnectionParameterData struct {
 	Host string
+	IP   net.IP
 	Port int
 }
 
 func (p ConnectionParameterData) String() string {
-	return fmt.Sprintf("%s:%d", p.Host, p.Port)
+	if len(p.Host) > 0 {
+		return fmt.Sprintf("%s:%d", p.Host, p.Port)
+	}
+	return fmt.Sprintf("%s:%d", p.IP, p.Port)
 }
 
 // BooleanParameterData is the data contained in a BooleanParameter

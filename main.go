@@ -3,9 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/zachdeibert/protomux/config"
 	"github.com/zachdeibert/protomux/config/cmd"
+	"github.com/zachdeibert/protomux/framework/engine"
+
+	_ "github.com/zachdeibert/protomux/protocols/minecraft"
 )
 
 func main() {
@@ -22,5 +27,16 @@ func main() {
 		cmd.Help(os.Stdout, config.CommandFlags, os.Args[0])
 		os.Exit(0)
 	}
-	fmt.Println(cfg)
+	eng, err := engine.CreateEngine(*cfg)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	eng.Start()
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	fmt.Println("ProtoMux started.")
+	<-c
+	eng.Stop()
+	fmt.Println("ProtoMux stopped.")
 }

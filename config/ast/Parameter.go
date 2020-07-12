@@ -31,6 +31,7 @@ func parseConnectionParameter(lexeme lexer.Lexeme) (interface{}, error) {
 	}
 	return &ConnectionParameterData{
 		Host: lexeme.StringValue,
+		IP:   lexeme.IPValue,
 		Port: lexeme.IntValue,
 	}, nil
 }

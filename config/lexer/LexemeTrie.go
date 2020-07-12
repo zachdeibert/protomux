@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"fmt"
+	"net"
 	"strconv"
 	"strings"
 
@@ -42,7 +42,7 @@ var lexemeTrieKeyToken = &LexemeTrieNode{
 				nil, // KeyToken
 				{ // IntToken
 					Handler: func(t []tokenizer.Token) (*Lexeme, error) {
-						port, err := strconv.ParseInt(t[len(t)-1].Value, 10, 16)
+						port, err := strconv.ParseUint(t[len(t)-1].Value, 10, 16)
 						if err != nil {
 							// TODO wrap the error
 							return nil, err
@@ -140,14 +140,30 @@ var LexemeTrie = LexemeTrieNode{
 																		nil, // KeyToken
 																		{ // IntToken
 																			Handler: func(t []tokenizer.Token) (*Lexeme, error) {
-																				port, err := strconv.ParseInt(t[8].Value, 10, 16)
+																				a, err := strconv.ParseUint(t[0].Value, 10, 8)
+																				if err != nil {
+																					return nil, ErrorIntParse(t[0].Location, t[0].Value, err)
+																				}
+																				b, err := strconv.ParseUint(t[2].Value, 10, 8)
+																				if err != nil {
+																					return nil, ErrorIntParse(t[2].Location, t[2].Value, err)
+																				}
+																				c, err := strconv.ParseUint(t[4].Value, 10, 8)
+																				if err != nil {
+																					return nil, ErrorIntParse(t[4].Location, t[4].Value, err)
+																				}
+																				d, err := strconv.ParseUint(t[6].Value, 10, 8)
+																				if err != nil {
+																					return nil, ErrorIntParse(t[6].Location, t[6].Value, err)
+																				}
+																				port, err := strconv.ParseUint(t[8].Value, 10, 16)
 																				if err != nil {
 																					return nil, ErrorIntParse(t[8].Location, t[8].Value, err)
 																				}
 																				return &Lexeme{
-																					Type:        ConnectionLexeme,
-																					StringValue: fmt.Sprintf("%s.%s.%s.%s", t[0].Value, t[2].Value, t[4].Value, t[6].Value),
-																					IntValue:    int(port),
+																					Type:     ConnectionLexeme,
+																					IntValue: int(port),
+																					IPValue:  net.IPv4(byte(a), byte(b), byte(c), byte(d)),
 																				}, nil
 																			},
 																		},
@@ -253,7 +269,7 @@ var LexemeTrie = LexemeTrieNode{
 				nil, // KeyToken (lexemeTrieKeyToken)
 				{ // IntToken
 					Handler: func(t []tokenizer.Token) (*Lexeme, error) {
-						port, err := strconv.ParseInt(t[1].Value, 10, 16)
+						port, err := strconv.ParseUint(t[1].Value, 10, 16)
 						if err != nil {
 							// TODO wrap the error
 							return nil, err

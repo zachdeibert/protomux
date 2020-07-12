@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/zachdeibert/protomux/config/common"
 )
@@ -11,6 +12,7 @@ type Lexeme struct {
 	Type        LexemeType
 	StringValue string
 	IntValue    int
+	IPValue     net.IP
 	Location    common.Location
 }
 
@@ -23,5 +25,5 @@ func (l Lexeme) RawString() string {
 }
 
 func (l Lexeme) String() string {
-	return fmt.Sprintf("{Lexeme Type=%d, StringValue='%s', IntValue=%d, At=%s}\n%s", l.Type, l.StringValue, l.IntValue, l.Location.ShortString(), l.Location)
+	return fmt.Sprintf("{Lexeme Type=%d, StringValue='%s', IntValue=%d, IPValue=%s, At=%s}\n%s", l.Type, l.StringValue, l.IntValue, l.IPValue, l.Location.ShortString(), l.Location)
 }

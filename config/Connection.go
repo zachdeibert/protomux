@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/zachdeibert/protomux/config/ast"
 )
@@ -9,6 +10,7 @@ import (
 // Connection represents a data type which contains information needed to open a socket
 type Connection struct {
 	Host string
+	IP   net.IP
 	Port int
 }
 
@@ -16,10 +18,14 @@ type Connection struct {
 func ParseConnection(conn ast.ConnectionParameterData) (*Connection, error) {
 	return &Connection{
 		Host: conn.Host,
+		IP:   conn.IP,
 		Port: conn.Port,
 	}, nil
 }
 
 func (c Connection) String() string {
-	return fmt.Sprintf("%s:%d", c.Host, c.Port)
+	if len(c.Host) > 0 {
+		return fmt.Sprintf("%s:%d", c.Host, c.Port)
+	}
+	return fmt.Sprintf("%s:%d", c.IP, c.Port)
 }
