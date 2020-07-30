@@ -2,9 +2,6 @@ package minecraft
 
 import (
 	"bufio"
-	"io"
-	"net"
-	"sync"
 
 	"github.com/zachdeibert/protomux/framework"
 )
@@ -23,25 +20,18 @@ func CreateProtocolInstance(action ActionProps, filter FilteringProps) *Protocol
 	}
 }
 
-func e(err error) framework.ProtocolState {
-	if err == io.EOF {
-		return framework.ProtocolNeedsMoreData
-	}
-	return framework.ProtocolNotMatched
-}
-
 // Handle the protocol
-func (p ProtocolInstance) Handle(conn net.Conn, state framework.HandlerState, waitGroup *sync.WaitGroup) framework.ProtocolState {
+func (p ProtocolInstance) Handle(conn framework.Connection) error {
 	stream := bufio.NewReader(conn)
 	data, err := stream.Peek(1)
 	if err != nil {
-		return e(err)
+		return err
 	}
 	if data[0] == 0xFE {
 		// Before Netty rewrite
 		// TODO
-		return framework.ProtocolNotMatched
+		return ErrorProtocol("Before Netty rewrite not supported")
 	}
 	// After Netty rewrite
-	return p.HandleNettyRewrite(conn, stream, state, waitGroup)
+	return p.HandleNettyRewrite(conn, stream)
 }

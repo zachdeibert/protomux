@@ -3,39 +3,34 @@ package minecraft
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"net"
-	"sync"
 
 	"github.com/zachdeibert/protomux/config"
 	"github.com/zachdeibert/protomux/framework"
 )
 
 // HandleNettyRewrite handles the protocol for clients that have the Netty rewrite
-func (p ProtocolInstance) HandleNettyRewrite(conn net.Conn, stream *bufio.Reader, state framework.HandlerState, waitGroup *sync.WaitGroup) framework.ProtocolState {
+func (p ProtocolInstance) HandleNettyRewrite(conn framework.Connection, stream *bufio.Reader) error {
 	reader := CreateReader(stream)
 	writer := CreateWriter(conn)
 	pkt, id, err := reader.ReadUncompressedPacket()
 	if err != nil {
-		return e(err)
+		return err
 	}
 	if id != 0 {
-		return framework.ProtocolNotMatched
+		return ErrorProtocol("Expected handshake packet")
 	}
 	version, err := pkt.ReadVarInt()
 	if err != nil {
-		return e(err)
+		return err
 	}
 	addr, err := pkt.ReadString()
 	if err != nil {
-		if err == io.EOF {
-			return framework.ProtocolNeedsMoreData
-		}
-		return framework.ProtocolNotMatched
+		return err
 	}
 	port, err := pkt.ReadUShort()
 	if err != nil {
-		return e(err)
+		return err
 	}
 	c := config.Connection{
 		Port: int(port),
@@ -50,30 +45,31 @@ func (p ProtocolInstance) HandleNettyRewrite(conn net.Conn, stream *bufio.Reader
 		ServerAddress: []config.Connection{c},
 	}
 	if !filterData.Check(p.Filter) {
-		return framework.ProtocolNotMatched
+		return ErrorProtocol("Filter mismatch")
 	}
-	if state != framework.HandoffState {
-		if p.Filter.IsEmpty() {
-			return framework.ProtocolNeedsMoreData
-		}
-		return framework.ProtocolMatched
+	priority := 1
+	if filterData.IsEmpty() {
+		priority = 0
+	}
+	if err = conn.RequireExclusive(priority); err != nil {
+		return err
 	}
 	nextState, err := pkt.ReadVarInt()
 	if err != nil {
-		return e(err)
+		return err
 	}
 	switch nextState {
 	case 1: // status
 		if p.Action.MOTD == nil {
 			// TODO proxy
-			return framework.ProtocolNotMatched
+			return ErrorProtocol("Status proxying")
 		}
 		_, id, err = reader.ReadUncompressedPacket()
 		if err != nil {
-			return e(err)
+			return err
 		}
 		if id != 0 {
-			return framework.ProtocolNotMatched
+			return ErrorProtocol("Expected status packet")
 		}
 		versionName := ""
 		for i, v := range p.Filter.Version {
@@ -93,34 +89,34 @@ func (p ProtocolInstance) HandleNettyRewrite(conn net.Conn, stream *bufio.Reader
 		wpkt.Close()
 		pkt, id, err = reader.ReadUncompressedPacket()
 		if err != nil {
-			return e(err)
+			return err
 		}
 		if id != 1 {
-			return framework.ProtocolNotMatched
+			return ErrorProtocol("Expected ping packet")
 		}
 		payload, err := pkt.ReadULong()
 		if err != nil {
-			return e(err)
+			return err
 		}
 		wpkt = writer.WriteUncompressedPacket(1)
 		wpkt.WriteULong(payload)
 		wpkt.Close()
-		return framework.ProtocolMatched
+		return nil
 	case 2: // login
 		if p.Action.Remote != nil {
 			// TODO proxy
-			return framework.ProtocolNotMatched
+			return ErrorProtocol("Login not supported")
 		}
 		pkt, id, err := reader.ReadUncompressedPacket()
 		if err != nil {
-			return e(err)
+			return err
 		}
 		if id != 0 {
-			return framework.ProtocolNotMatched
+			return ErrorProtocol("Expected login packet")
 		}
 		username, err := pkt.ReadString()
 		if err != nil {
-			return e(err)
+			return err
 		}
 		wpkt := writer.WriteUncompressedPacket(0x02)
 		wpkt.WriteString("00000000-0000-0000-0000-000000000000")
@@ -130,8 +126,8 @@ func (p ProtocolInstance) HandleNettyRewrite(conn net.Conn, stream *bufio.Reader
 		wpkt = writer.WriteUncompressedPacket(0x1B)
 		wpkt.WriteString(reason)
 		wpkt.Close()
-		return framework.ProtocolMatched
+		return nil
 	default:
-		return framework.ProtocolNotMatched
+		return ErrorProtocol("Unknown next state")
 	}
 }

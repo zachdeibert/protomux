@@ -1,20 +1,21 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/zachdeibert/protomux/config"
 	"github.com/zachdeibert/protomux/framework"
-	"github.com/zachdeibert/protomux/framework/listener"
 )
 
 // Engine runs the main part of the program
 type Engine struct {
-	Listeners []*listener.Listener
+	Services []*Service
 }
 
 // CreateEngine creates a new Engine
 func CreateEngine(cfg config.Config) (*Engine, error) {
 	eng := &Engine{
-		Listeners: []*listener.Listener{},
+		Services: []*Service{},
 	}
 	for _, srv := range cfg.Services {
 		protos := []framework.ProtocolInstance{}
@@ -31,25 +32,35 @@ func CreateEngine(cfg config.Config) (*Engine, error) {
 				protos = append(protos, inst)
 			}
 		}
-		l, err := listener.CreateListener(srv.ListenAddresses, protos)
+		s, err := CreateService(srv.ListenAddresses, protos, eng)
 		if err != nil {
 			return nil, err
 		}
-		eng.Listeners = append(eng.Listeners, l)
+		eng.Services = append(eng.Services, s)
 	}
 	return eng, nil
 }
 
 // Start starts the Engine
 func (e *Engine) Start() {
-	for _, l := range e.Listeners {
-		l.Start()
+	for _, s := range e.Services {
+		s.Start()
 	}
 }
 
 // Stop stops the Engine
 func (e *Engine) Stop() {
-	for _, l := range e.Listeners {
-		l.Stop()
+	for _, s := range e.Services {
+		s.Stop()
 	}
+}
+
+// NonCriticalError handles a non-critical error
+func (e *Engine) NonCriticalError(err error) {
+	fmt.Println(err)
+}
+
+// NormalError handles an error that isn't critical, but also is more severe than other non-critical errors
+func (e *Engine) NormalError(err error) {
+	fmt.Println(err)
 }

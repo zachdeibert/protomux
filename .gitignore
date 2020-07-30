@@ -108,6 +108,7 @@
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+__debug_bin
 
 # Local History for Visual Studio Code
 .history/

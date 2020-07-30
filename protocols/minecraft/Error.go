@@ -20,6 +20,8 @@ const (
 	ErrorCodeUnrecognizedParameter ErrorCode = iota
 	// ErrorCodeUnknownRemoteType represents when an unknown report type is specified
 	ErrorCodeUnknownRemoteType ErrorCode = iota
+	// ErrorCodeProtocol represents a protocol error
+	ErrorCodeProtocol ErrorCode = iota
 )
 
 // Error describes an error with the Minecraft protocol implementation
@@ -69,5 +71,13 @@ func ErrorUnknownRemoteType(name string) error {
 	return &Error{
 		Message: fmt.Sprintf("Unrecognized remote type '%s'", name),
 		Code:    ErrorCodeUnknownRemoteType,
+	}
+}
+
+// ErrorProtocol creates a new ErrorProtocol error
+func ErrorProtocol(message string) error {
+	return &Error{
+		Message: message,
+		Code:    ErrorCodeProtocol,
 	}
 }
